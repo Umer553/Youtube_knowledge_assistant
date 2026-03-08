@@ -1,171 +1,88 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/LangChain-RAG-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" />
-  <img src="https://img.shields.io/badge/Streamlit-Chat_UI-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white" />
-  <img src="https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai&logoColor=white" />
-  <img src="https://img.shields.io/badge/ChromaDB-Vector_Store-FF6F00?style=for-the-badge" />
-</p>
+# 🎬 YouTube Knowledge Assistant
 
-<h1 align="center">🎬 YouTube Knowledge Assistant</h1>
+A multi-video, multimodal RAG chatbot that lets you **chat with YouTube videos** — powered by LangChain, ChromaDB, and GPT-4o-mini.
 
-<p align="center">
-  <b>Chat with any YouTube video — get timestamped answers, summaries, flashcards, and more.</b><br>
-  A multi-video RAG chatbot built with LangChain, ChromaDB, and GPT-4o-mini.
-</p>
-
-<p align="center">
-  <i>Final Year Project by Muhammad Saad</i>
-</p>
+> **Final Year Project** — Goes beyond basic YouTube Q&A with cross-video comparison, timestamped answers, comment sentiment analysis, and smart output formatting.
 
 ---
 
-## What It Does
-
-Paste a YouTube video URL (or a full playlist) → the system extracts the transcript, chunks it with timestamps, embeds it into a vector database, and lets you **ask questions in natural language**. Every answer comes with a clickable timestamp link that jumps you to the exact moment in the video.
-
-It goes beyond basic Q&A:
-
-- **Ask questions** about the video content and get cited, timestamped answers
-- **Summarize** entire videos or specific topics
-- **Compare** information across multiple loaded videos
-- **Generate flashcards & quizzes** for study/revision
-- **See what viewers think** through comment sentiment analysis
-- **Follow-up naturally** — conversation memory handles multi-turn chat
-
----
-
-## How It Works
-
-```
-YouTube URL → Transcript Extraction → Timestamp-Aware Chunking → ChromaDB Embeddings
-                                                                        ↓
-User Question → Query Router → Intent Detection → Appropriate Chain → LLM (GPT-4o-mini)
-                                                                        ↓
-                                                          Timestamped Answer + Sources
-```
-
-**The pipeline in simple terms:**
-
-1. You paste a YouTube URL (video, playlist, or channel)
-2. The system fetches the transcript using YouTube's caption API (or Whisper if no captions exist)
-3. The transcript is split into chunks — each chunk remembers its start and end timestamp
-4. Chunks are embedded and stored in ChromaDB for semantic search
-5. When you ask a question, the system retrieves the most relevant chunks
-6. GPT-4o-mini generates an answer, citing the exact video timestamps
-7. A smart router auto-detects whether you want Q&A, a summary, a comparison, flashcards, or a quiz
-
----
-
-## Features
+## ✨ Features
 
 | Feature | Description |
-|---|---|
-| Multi-Video Support | Load single videos, entire playlists, or channel URLs |
-| Timestamped Answers | Every answer links to the exact moment in the video |
-| Smart Query Routing | Auto-detects intent — Q&A, summary, compare, quiz, sentiment |
-| Cross-Video Comparison | Compare what different videos say about the same topic |
-| Comment Sentiment Analysis | VADER + LLM-based theme clustering on viewer comments |
-| Flashcard & Quiz Generation | Create study material directly from video content |
-| Conversation Memory | Follow-up questions work naturally with context preservation |
-| Whisper Fallback | Handles videos without captions via OpenAI Whisper |
+|---------|-------------|
+| **Multi-Video Ingestion** | Load single videos, playlists, or entire channels |
+| **Timestamped Answers** | Every answer links back to the exact moment in the video |
+| **Cross-Video Comparison** | Compare perspectives across multiple videos |
+| **Comment Sentiment Analysis** | Understand what viewers think using VADER + LLM clustering |
+| **Smart Query Routing** | Auto-detects if you're asking a question, requesting a summary, or comparing |
+| **Multiple Output Formats** | Summaries, study notes, flashcards, quizzes — all from video content |
+| **Conversation Memory** | Follow-up questions work naturally with context preservation |
 
 ---
 
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Streamlit, streamlit-chat |
-| Framework | LangChain (LCEL) |
-| LLM | OpenAI GPT-4o-mini |
-| Embeddings | text-embedding-3-small |
-| Vector Store | ChromaDB |
-| Metadata DB | SQLite |
-| Transcripts | youtube-transcript-api, OpenAI Whisper |
-| Comments | YouTube Data API v3 |
-| Sentiment | VADER Sentiment Analysis |
-| Deployment | Streamlit Cloud, Docker |
-
----
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-youtube-knowledge-assistant/
-│
-├── app/
-│   ├── main.py                  # Streamlit entry point
-│   ├── config.py                # API keys, model settings, constants
-│   └── components/              # UI components
-│
-├── core/
-│   ├── ingestion/
-│   │   ├── url_parser.py        # Resolves video / playlist / channel URLs
-│   │   ├── transcript.py        # Transcript extraction (API + Whisper)
-│   │   └── comments.py          # YouTube comment fetcher
-│   │
-│   ├── processing/
-│   │   ├── chunker.py           # Timestamp-aware text splitting
-│   │   ├── embedder.py          # Embedding pipeline
-│   │   └── sentiment.py         # VADER + LLM comment analysis
-│   │
-│   ├── retrieval/
-│   │   ├── vector_store.py      # ChromaDB wrapper
-│   │   ├── retriever.py         # MultiQuery retriever + MMR
-│   │   └── metadata_store.py    # SQLite for metadata & history
-│   │
-│   └── chains/
-│       ├── router.py            # Query intent classification
-│       ├── qa_chain.py          # Q&A with timestamped citations
-│       ├── summary_chain.py     # Video summarization
-│       ├── compare_chain.py     # Cross-video comparison
-│       ├── sentiment_chain.py   # Comment-aware responses
-│       └── formatter.py         # Flashcard & quiz generator
-│
-├── data/                        # ChromaDB + SQLite (auto-created)
-├── tests/
-├── .env.example
-├── requirements.txt
-├── Dockerfile
-└── README.md
+User → Streamlit UI
+         ↓
+    URL Parser (video/playlist/channel)
+         ↓
+    ┌─────────────────┬──────────────────┐
+    │ Transcript Engine │  Comment Fetcher │
+    │ (YT API/Whisper) │  (YT Data API)   │
+    └────────┬────────┘──────┬───────────┘
+             ↓               ↓
+    Timestamp-Aware      Sentiment Analysis
+    Chunker              (VADER + LLM)
+             ↓               ↓
+    ChromaDB             SQLite
+    (Vector Store)       (Metadata Store)
+             ↓               ↓
+    ┌────────┴───────────────┴──────────┐
+    │        Query Router (LLM)          │
+    │  factual_qa | summarize | compare  │
+    │  sentiment | quiz | flashcards     │
+    └────────────────┬──────────────────┘
+                     ↓
+              LLM Response + Sources
+              + Timestamp Links
 ```
 
 ---
 
-## Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- Python 3.10 or higher
-- An OpenAI API key ([get one here](https://platform.openai.com/api-keys)) — $5 credit is more than enough
-- A YouTube Data API v3 key ([get one here](https://console.cloud.google.com/apis/library/youtube.googleapis.com)) — free, optional but needed for comments
+- Python 3.10+
+- OpenAI API key (for GPT-4o-mini + embeddings)
+- YouTube Data API v3 key (optional, for comments)
 
 ### Installation
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/youtube-knowledge-assistant.git
+# Clone the repository
+git clone https://github.com/yourusername/youtube-knowledge-assistant.git
 cd youtube-knowledge-assistant
 
-# Create a virtual environment
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up your API keys
+# Setup environment variables
 cp .env.example .env
-# Open .env and paste your OPENAI_API_KEY and YOUTUBE_API_KEY
+# Edit .env and add your API keys
 ```
 
-### Run
+### Run the App
 
 ```bash
 streamlit run app/main.py
 ```
 
-Open `http://localhost:8501` in your browser. Paste a YouTube URL in the sidebar, click **Process**, and start chatting.
+The app will open at `http://localhost:8501`
 
 ### Docker (Alternative)
 
@@ -176,41 +93,102 @@ docker run -p 8501:8501 --env-file .env youtube-assistant
 
 ---
 
-## Usage Examples
+## 📖 Usage
 
-| What you ask | What happens |
-|---|---|
-| *"What is the main topic of this video?"* | Factual Q&A with timestamp links |
-| *"Summarize this video"* | Structured summary with key points |
-| *"Compare what both videos say about X"* | Side-by-side comparison |
-| *"What do viewers think about this?"* | Comment sentiment + video content |
-| *"Generate flashcards"* | Q&A pairs with timestamps |
-| *"Create a 5-question quiz"* | MCQs with answer key |
+1. **Add API Keys** — Enter your OpenAI and YouTube API keys in the sidebar
+2. **Paste a URL** — Any YouTube video, playlist, or channel URL
+3. **Click Process** — The system extracts transcripts, chunks them, and indexes everything
+4. **Start Chatting** — Ask questions, request summaries, or generate study materials
+5. **Choose Format** — Use the dropdown to get flashcards, quizzes, or comparisons
 
----
+### Example Queries
 
-## API Cost Estimate
-
-This project is designed to be cheap to run:
-
-| Model | Cost | Usage |
-|---|---|---|
-| GPT-4o-mini | $0.15 / 1M input tokens | LLM for Q&A, summaries, quizzes |
-| text-embedding-3-small | $0.02 / 1M tokens | Vector embeddings |
-| YouTube Data API v3 | Free (10,000 units/day) | Comments & metadata |
-
-A typical session of 20 questions costs roughly **$0.01–0.03**. The $5 starting credit covers thousands of queries.
+| Query | What Happens |
+|-------|-------------|
+| "What is the main topic?" | Factual Q&A with timestamp sources |
+| "Summarize this video" | Structured summary with section timestamps |
+| "Compare what both videos say about X" | Side-by-side comparison from multiple videos |
+| "What do viewers think?" | Comment sentiment analysis integrated with content |
+| "Generate flashcards" | Q&A flashcard pairs from video content |
+| "Create a quiz" | MCQ quiz with answer key and explanations |
 
 ---
 
-## License
+## 🛠️ Tech Stack
 
-This project was built as a Final Year Project for academic purposes.
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Frontend | Streamlit | Chat UI with video previews |
+| Orchestration | LangChain (LCEL) | RAG pipeline, chains, routing |
+| LLM | GPT-4o-mini | Generation, classification, analysis |
+| Embeddings | text-embedding-3-small | Semantic search |
+| Vector Store | ChromaDB | Transcript embeddings + metadata |
+| Metadata DB | SQLite | Video info, sentiment, chat history |
+| Transcripts | youtube-transcript-api + Whisper | Caption extraction |
+| Comments | YouTube Data API v3 | Comment fetching |
+| Sentiment | VADER + LLM | Comment polarity + theme clustering |
 
 ---
 
-## Author
+## 📁 Project Structure
 
-**Umer Aftab**
+```
+youtube-knowledge-assistant/
+├── app/
+│   ├── main.py                 # Streamlit entry point
+│   ├── config.py               # Settings & constants
+│   └── components/             # UI components
+├── core/
+│   ├── ingestion/
+│   │   ├── url_parser.py       # URL resolution
+│   │   ├── transcript.py       # Transcript extraction
+│   │   └── comments.py         # Comment fetching
+│   ├── processing/
+│   │   ├── chunker.py          # Timestamp-aware splitting
+│   │   ├── embedder.py         # Embedding pipeline
+│   │   └── sentiment.py        # Sentiment analysis
+│   ├── retrieval/
+│   │   ├── vector_store.py     # ChromaDB wrapper
+│   │   ├── retriever.py        # Multi-query retriever
+│   │   └── metadata_store.py   # SQLite operations
+│   └── chains/
+│       ├── router.py           # Query intent classification
+│       ├── qa_chain.py         # Q&A with sources
+│       ├── summary_chain.py    # Summarization
+│       ├── compare_chain.py    # Cross-video comparison
+│       ├── sentiment_chain.py  # Comment-aware responses
+│       └── formatter.py        # Flashcards, quizzes
+├── data/                       # ChromaDB + SQLite storage
+├── tests/
+├── .env.example
+├── requirements.txt
+├── Dockerfile
+└── README.md
+```
 
 ---
+
+## 📊 Evaluation Metrics (For FYP Report)
+
+- **Retrieval Accuracy**: Measure if the correct video segments are retrieved (Precision@K, Recall@K)
+- **Answer Quality**: Human evaluation of factual correctness and completeness
+- **Timestamp Accuracy**: Whether cited timestamps actually contain the referenced content
+- **Sentiment Accuracy**: Compare VADER results with manual annotation on a sample
+- **Response Latency**: End-to-end time from query to response
+- **Chunk Size Analysis**: Compare different chunk sizes and overlaps on retrieval quality
+
+---
+
+## 📄 License
+
+This project is built for educational purposes as a Final Year Project.
+
+---
+
+## 🙏 Acknowledgments
+
+- [LangChain](https://langchain.com) — RAG framework
+- [ChromaDB](https://trychroma.com) — Vector database
+- [OpenAI](https://openai.com) — LLM and embeddings
+- [Streamlit](https://streamlit.io) — Frontend framework
+- [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) — Transcript extraction
