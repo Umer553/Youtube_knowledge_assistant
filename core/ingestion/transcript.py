@@ -99,46 +99,79 @@ def fetch_transcript(video_id: str, languages: list[str] = None) -> Optional[Vid
 def _fetch_from_youtube_api(
     video_id: str, languages: Optional[list[str]]
 ) -> Optional[VideoTranscript]:
-    """Extract transcript using youtube-transcript-api."""
+    """Extract transcript using youtube-transcript-api.
+    Handles both the legacy dict-based API (<0.6.x) and newer object-based API.
+    """
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
 
+        transcript_data = None
+
+        # Try newer API style first (0.6.3+): fetch() as class method
         if languages:
-            transcript_data = YouTubeTranscriptApi.get_transcript(
-                video_id, languages=languages
-            )
-        else:
-            # Get whatever transcript is available
-            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-            # Prefer manually created, then auto-generated
             try:
-                transcript_obj = transcript_list.find_manually_created_transcript(
-                    ['en', 'en-US', 'en-GB']
+                transcript_data = YouTubeTranscriptApi.fetch(
+                    video_id, languages=languages
                 )
-            except Exception:
+            except AttributeError:
+                pass
+
+        # Try legacy API style: get_transcript()
+        if transcript_data is None and languages:
+            try:
+                transcript_data = YouTubeTranscriptApi.get_transcript(
+                    video_id, languages=languages
+                )
+            except AttributeError:
+                pass
+
+        # Fallback: use list_transcripts to find any available transcript
+        if transcript_data is None:
+            try:
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
                 try:
-                    transcript_obj = transcript_list.find_generated_transcript(
+                    transcript_obj = transcript_list.find_manually_created_transcript(
                         ['en', 'en-US', 'en-GB']
                     )
                 except Exception:
-                    # Get first available transcript
-                    for t in transcript_list:
-                        transcript_obj = t
-                        break
-                    else:
-                        return None
+                    try:
+                        transcript_obj = transcript_list.find_generated_transcript(
+                            ['en', 'en-US', 'en-GB']
+                        )
+                    except Exception:
+                        transcript_obj = next(iter(transcript_list), None)
+                        if transcript_obj is None:
+                            return None
 
-            transcript_data = transcript_obj.fetch()
+                transcript_data = transcript_obj.fetch()
+            except AttributeError:
+                pass
 
-        segments = [
-            TranscriptSegment(
-                text=entry['text'].replace('\n', ' ').strip(),
-                start=entry['start'],
-                duration=entry['duration'],
-            )
-            for entry in transcript_data
-            if entry.get('text', '').strip()
-        ]
+        # Last fallback: instantiate the class (newest API style)
+        if transcript_data is None:
+            try:
+                api = YouTubeTranscriptApi()
+                transcript_data = api.fetch(video_id, languages=languages or ['en', 'en-US'])
+            except Exception:
+                pass
+
+        if transcript_data is None:
+            return None
+
+        # Normalise: support both dict entries and object entries
+        segments = []
+        for entry in transcript_data:
+            if isinstance(entry, dict):
+                text = entry.get('text', '').replace('\n', ' ').strip()
+                start = entry.get('start', 0.0)
+                duration = entry.get('duration', 0.0)
+            else:
+                text = getattr(entry, 'text', '').replace('\n', ' ').strip()
+                start = getattr(entry, 'start', 0.0)
+                duration = getattr(entry, 'duration', 0.0)
+
+            if text:
+                segments.append(TranscriptSegment(text=text, start=start, duration=duration))
 
         if not segments:
             return None
@@ -213,7 +246,14 @@ def _fetch_from_whisper(video_id: str) -> Optional[VideoTranscript]:
         print(f"Whisper dependencies not available: {e}")
         return None
     except Exception as e:
-        print(f"Whisper transcription failed for {video_id}: {e}")
+        msg = str(e)
+        if "ffprobe" in msg or "ffmpeg" in msg:
+            print(
+                f"Whisper transcription requires ffmpeg. "
+                f"Install it from https://ffmpeg.org/download.html and add to PATH."
+            )
+        else:
+            print(f"Whisper transcription failed for {video_id}: {e}")
         return None
 
 
