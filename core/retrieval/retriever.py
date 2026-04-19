@@ -7,7 +7,7 @@ Advanced retrieval strategies for the RAG pipeline:
 """
 
 from typing import Optional
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain.retrievers import MultiQueryRetriever
 from langchain_core.retrievers import BaseRetriever
 

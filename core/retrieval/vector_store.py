@@ -5,7 +5,7 @@ Supports metadata filtering by video_id, timestamp range, etc.
 """
 
 from typing import Optional
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain_chroma import Chroma
 
 from app.config import CHROMA_DIR, CHROMA_COLLECTION_NAME

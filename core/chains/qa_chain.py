@@ -7,7 +7,6 @@ Returns answers with source citations and clickable timestamp links.
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
-from langchain.memory import ConversationBufferWindowMemory
 
 from core.retrieval.retriever import format_retrieved_context
 from app.config import MEMORY_WINDOW_SIZE

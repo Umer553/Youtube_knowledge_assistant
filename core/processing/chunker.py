@@ -10,8 +10,8 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from dataclasses import dataclass
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 
 from core.ingestion.transcript import VideoTranscript, TranscriptSegment
 from app.config import CHUNK_SIZE, CHUNK_OVERLAP, SEPARATORS

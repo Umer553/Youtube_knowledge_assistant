@@ -5,7 +5,7 @@ Wraps LangChain embedding classes with fallback support.
 """
 
 from typing import Optional
-from langchain.schema import Document
+from langchain_core.documents import Document
 
 
 def get_embedding_model(
