@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── API Keys ───────────────────────────────────────────────
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 
 # ── Paths ──────────────────────────────────────────────────
@@ -26,14 +26,14 @@ DATA_DIR.mkdir(exist_ok=True)
 CHROMA_DIR.mkdir(exist_ok=True)
 
 # ── LLM Settings ──────────────────────────────────────────
-LLM_MODEL = "gpt-4o-mini"
+LLM_MODEL = "claude-sonnet-4-6"
 LLM_TEMPERATURE = 0.3                # Low temp for factual Q&A
 LLM_TEMPERATURE_CREATIVE = 0.7       # Higher for summaries/quizzes
 LLM_MAX_TOKENS = 2048
 
 # ── Embedding Settings ─────────────────────────────────────
-EMBEDDING_MODEL = "text-embedding-3-small"
-EMBEDDING_DIMENSIONS = 1536
+EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+EMBEDDING_DIMENSIONS = 384
 
 # ── Chunking Settings ──────────────────────────────────────
 CHUNK_SIZE = 1000           # Characters per chunk (~250 tokens)

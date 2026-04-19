@@ -15,7 +15,7 @@ import uuid
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from app.config import (
-    OPENAI_API_KEY, YOUTUBE_API_KEY, LLM_MODEL,
+    ANTHROPIC_API_KEY, YOUTUBE_API_KEY, LLM_MODEL,
     LLM_TEMPERATURE, RETRIEVER_K, MEMORY_WINDOW_SIZE,
 )
 
@@ -101,19 +101,19 @@ init_session_state()
 @st.cache_resource
 def init_llm(api_key: str):
     """Initialize the LLM (cached across reruns)."""
-    from langchain_openai import ChatOpenAI
-    return ChatOpenAI(
+    from langchain_anthropic import ChatAnthropic
+    return ChatAnthropic(
         model=LLM_MODEL,
         temperature=LLM_TEMPERATURE,
-        openai_api_key=api_key,
+        anthropic_api_key=api_key,
     )
 
 
 @st.cache_resource
-def init_embeddings(api_key: str):
-    """Initialize embedding model (cached)."""
+def init_embeddings(_api_key: str = ""):
+    """Initialize embedding model (cached). Uses local HuggingFace model."""
     from core.processing.embedder import get_embedding_model
-    return get_embedding_model(provider="openai", api_key=api_key)
+    return get_embedding_model(provider="huggingface")
 
 
 @st.cache_resource
@@ -132,12 +132,12 @@ with st.sidebar:
     st.markdown('<p class="sub-header">Chat with any YouTube video</p>', unsafe_allow_html=True)
 
     # API Key inputs
-    with st.expander("🔑 API Keys", expanded=not bool(OPENAI_API_KEY)):
+    with st.expander("🔑 API Keys", expanded=not bool(ANTHROPIC_API_KEY)):
         openai_key = st.text_input(
-            "OpenAI API Key",
-            value=OPENAI_API_KEY,
+            "Anthropic API Key",
+            value=ANTHROPIC_API_KEY,
             type="password",
-            help="Required for GPT-4o-mini and embeddings"
+            help="Required for Claude (claude-sonnet-4-6)"
         )
         yt_key = st.text_input(
             "YouTube API Key",
@@ -199,7 +199,7 @@ if process_btn and url_input and openai_key:
         try:
             # Initialize models
             llm = init_llm(openai_key)
-            embeddings = init_embeddings(openai_key)
+            embeddings = init_embeddings()
             vector_store, metadata_store = init_stores(embeddings)
 
             st.session_state.llm = llm
