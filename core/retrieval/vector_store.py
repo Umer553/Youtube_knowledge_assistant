@@ -8,7 +8,7 @@ from typing import Optional
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 
-from app.config import CHROMA_DIR, CHROMA_COLLECTION_NAME
+from app.config import CHROMA_DIR
 
 
 class VectorStoreManager:
@@ -17,7 +17,7 @@ class VectorStoreManager:
     Supports adding documents, querying with filters, and cleanup.
     """
 
-    def __init__(self, embedding_model=None, collection_name: str = CHROMA_COLLECTION_NAME):
+    def __init__(self, embedding_model=None, collection_name: str = "youtube_transcripts"):
         """
         Initialize the vector store.
         

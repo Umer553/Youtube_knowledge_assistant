@@ -100,74 +100,63 @@ def _fetch_from_youtube_api(
     video_id: str, languages: Optional[list[str]]
 ) -> Optional[VideoTranscript]:
     """Extract transcript using youtube-transcript-api.
-    Handles both the legacy dict-based API (<0.6.x) and newer object-based API.
+
+    Tries three strategies in order so it works across library versions:
+      1. Instance-based API: YouTubeTranscriptApi().fetch()  (>= 0.6.3)
+      2. list_transcripts() → Transcript.fetch()             (stable across versions)
+      3. Legacy class method: YouTubeTranscriptApi.get_transcript()  (< 0.6)
     """
     try:
         from youtube_transcript_api import YouTubeTranscriptApi
 
+        langs = languages or ['en', 'en-US', 'en-GB']
         transcript_data = None
 
-        # Try newer API style first (0.6.3+): fetch() as class method
-        if languages:
-            try:
-                transcript_data = YouTubeTranscriptApi.fetch(
-                    video_id, languages=languages
-                )
-            except AttributeError:
-                pass
+        # Strategy 1: instance-based (youtube-transcript-api >= 0.6.3)
+        try:
+            api = YouTubeTranscriptApi()
+            transcript_data = api.fetch(video_id, languages=langs) if languages else api.fetch(video_id)
+        except Exception:
+            pass
 
-        # Try legacy API style: get_transcript()
-        if transcript_data is None and languages:
-            try:
-                transcript_data = YouTubeTranscriptApi.get_transcript(
-                    video_id, languages=languages
-                )
-            except AttributeError:
-                pass
-
-        # Fallback: use list_transcripts to find any available transcript
+        # Strategy 2: list_transcripts → find → fetch (stable across versions)
         if transcript_data is None:
             try:
-                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                tl = YouTubeTranscriptApi.list_transcripts(video_id)
                 try:
-                    transcript_obj = transcript_list.find_manually_created_transcript(
-                        ['en', 'en-US', 'en-GB']
-                    )
+                    t = tl.find_manually_created_transcript(langs)
                 except Exception:
                     try:
-                        transcript_obj = transcript_list.find_generated_transcript(
-                            ['en', 'en-US', 'en-GB']
-                        )
+                        t = tl.find_generated_transcript(langs)
                     except Exception:
-                        transcript_obj = next(iter(transcript_list), None)
-                        if transcript_obj is None:
-                            return None
-
-                transcript_data = transcript_obj.fetch()
-            except AttributeError:
+                        t = next(iter(tl), None)
+                if t is not None:
+                    transcript_data = t.fetch()
+            except Exception:
                 pass
 
-        # Last fallback: instantiate the class (newest API style)
+        # Strategy 3: legacy class-method API (< 0.6)
         if transcript_data is None:
             try:
-                api = YouTubeTranscriptApi()
-                transcript_data = api.fetch(video_id, languages=languages or ['en', 'en-US'])
+                transcript_data = YouTubeTranscriptApi.get_transcript(
+                    video_id, languages=langs
+                )
             except Exception:
                 pass
 
         if transcript_data is None:
             return None
 
-        # Normalise: support both dict entries and object entries
+        # Normalise: support both dict entries and object-based entries
         segments = []
         for entry in transcript_data:
             if isinstance(entry, dict):
-                text = entry.get('text', '').replace('\n', ' ').strip()
-                start = entry.get('start', 0.0)
+                text     = entry.get('text', '').replace('\n', ' ').strip()
+                start    = entry.get('start', 0.0)
                 duration = entry.get('duration', 0.0)
             else:
-                text = getattr(entry, 'text', '').replace('\n', ' ').strip()
-                start = getattr(entry, 'start', 0.0)
+                text     = getattr(entry, 'text', '').replace('\n', ' ').strip()
+                start    = getattr(entry, 'start', 0.0)
                 duration = getattr(entry, 'duration', 0.0)
 
             if text:

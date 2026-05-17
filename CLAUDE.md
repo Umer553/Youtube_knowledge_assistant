@@ -32,7 +32,7 @@ pytest tests/
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Claude (claude-sonnet-4-6) LLM |
+| `GOOGLE_API_KEY` | Yes | Gemini (gemini-2.0-flash) LLM — get from aistudio.google.com |
 | `YOUTUBE_API_KEY` | No | Comment fetching and video metadata |
 | `LANGCHAIN_API_KEY` | No | LangSmith tracing |
 
