@@ -8,7 +8,8 @@ A multi-video RAG (Retrieval-Augmented Generation) chatbot that lets you **chat 
 
 ## Interface
 
-![YouTube Knowledge Assistant UI](docs/screenshot.png)
+![YouTube Knowledge Assistant UI](image.png)
+
 
 *Dark glassmorphism UI with a collapsible sidebar, real-time stats, and white chat bubbles for readable responses.*
 
