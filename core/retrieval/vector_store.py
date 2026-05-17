@@ -54,7 +54,19 @@ class VectorStoreManager:
         if not documents:
             return []
 
-        ids = self.store.add_documents(documents)
+        try:
+            ids = self.store.add_documents(documents)
+        except Exception as e:
+            if "dimension" in str(e).lower():
+                # Stale collection has wrong embedding dimensions — drop and recreate
+                import chromadb as _chromadb
+                _client = _chromadb.PersistentClient(path=str(CHROMA_DIR))
+                _client.delete_collection(self.collection_name)
+                self._store = None  # clear lazy cache so store property rebuilds
+                ids = self.store.add_documents(documents)
+            else:
+                raise
+
         print(f"  Added {len(documents)} documents to vector store")
         return ids
 
